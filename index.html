@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing Plans</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    .toggle-buttons {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .toggle-buttons button {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      margin: 0 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s, transform 0.3s;
+      text-align: center;
+    }
+
+    .toggle-buttons button.active {
+      color: white;
+      transform: scale(1.05);
+    }
+
+    /* Private Button Style */
+    .private-btn {
+      background-color: #4CAF50;
+    }
+
+    /* General Button Style */
+    .general-btn {
+      background-color: #2196F3;
+    }
+
+    .pricing-cards {
+      display: flex;
+      justify-content: space-evenly;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .card {
+      flex: 1;
+      min-width: 250px;
+      max-width: 30%;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s, transform 0.3s, background-color 0.3s;
+      text-align: center;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .card.shadow-card {
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .card .price {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .card .discount {
+      font-size: 18px;
+      color: #FF6347;
+    }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card ul li {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .card ul li .check {
+      color: #4CAF50;
+      margin-right: 10px;
+    }
+
+    .private-card {
+      background-color: #e8f5e9;
+    }
+
+    .general-card {
+      background-color: #e3f2fd;
+    }
+
+    /* Card Titles with Different Colors */
+    .card-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .card-title.basic {
+      color: #FF9800;
+    }
+
+    .card-title.advanced {
+      color: #FF5722;
+    }
+
+    .card-title.special {
+      color: #9C27B0;
+    }
+
+    .active-cards {
+      display: flex;
+      justify-content: space-evenly;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .book-now-btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      width: 100%;
+      margin-top: 20px;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+
+    .book-now-btn:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    .form-container {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+      opacity: 0;
+      width: 80%; /* Changed to 80% */
+      max-width: 400px;
+      z-index: 1001; /* Ensure form is above overlay */
+    }
+
+    .form-container.active {
+      display: block;
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    .form-container input,
+    .form-container select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+    }
+    .form-container input:hover,
+    .form-container select:hover {  /* Added hover effect */        
+    background-color: #8b8888; /* Light grey background on hover */
+    }
+    
+    
+    .form-container button {
+      width: 47%;
+      padding: 10px;
+      margin: 10px 0 ;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+    }
+
+    .form-container .yes-no-buttons  {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 26px; /* Added margin for spacing */
+      padding: 0 10px; /* Added padding for spacing */
+
+
+    }
+    .form-container .submit-cancel {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 26px; /* Added margin for spacing */
+      padding: 0 10px; /* Added padding for spacing */
+    }
+
+    .form-container .extra-course-input {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .form-container .extra-course-input input {
+      padding: 10px;
+    }
+ 
+    .form-container button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .form-container button:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+    .form-container .close-btn {
+     background: red; /* Ensure it is red */
+     }
+     .form-container .close-btn:hover {
+     background: red; /* Ensure it is red */
+     }
+     
+    
+
+    .close-btn {
+      color: white; /* Text color */
+      border: none;
+      font-size: 20px;
+      cursor: pointer;    
+      padding: 5px 10px; /* Added padding */
+      border-radius: 5px; /* Rounded corners */
+    }
+
+    .form-container .form-header {
+    background-color: #45a049; /* Set background color to green */
+    text-align: center;      /* Center-align text inside the div */
+    padding: 20px;          /* Optional: Add padding for better spacing */
+    margin: -27px 0px 24px;    ;      /* Added margin for spacing */
+    border-radius: 5px;     /* Optional: Add rounded corners */
+    width: 90%;            /* Optional: Set width to 100% */
+    color: white;           /* Optional: Set text color to white */
+
+}
+
+.from-head {
+    margin: 0;              /* Remove default margins from h2 */
+}
+ 
+
+    /* Overlay Style */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      display: none; /* Hidden by default */
+      z-index: 1000; /* Ensure overlay is below form */
+    }
+
+    @media (max-width: 480px) {
+      .form-container {
+        width: 95%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .pricing-cards {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .card {
+        max-width: 90%;
+        margin-bottom: 20px;
+      }
+
+      .toggle-buttons button {
+        font-size: 14px;
+        padding: 12px 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .toggle-buttons button {
+        font-size: 14px;
+        padding: 12px 20px;
+      }
+
+      .card {
+        max-width: 100%;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="overlay" id="overlay"></div> <!-- Overlay div -->
+
+  <div class="container">
+    <!-- Toggle buttons for Private / General -->
+    <div class="toggle-buttons">
+      <button class="private-btn active" onclick="togglePlans('private')">Private</button>
+      <button class="general-btn" onclick="togglePlans('general')">General</button>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="pricing-cards" id="pricing-cards">
+      <!-- Private Plans -->
+      <div class="active-cards private">
+        <div class="card private-card">
+          <div class="card-title basic">Basic</div>
+          <div class="price">2000 EGP / month</div>
+          <ul>
+            <li><span class="check">&#10003;</span>Price per month</li>
+            <li><span class="check">&#10003;</span>No discount</li>
+          </ul>
+          <button class="book-now-btn" onclick="showForm()">Book Now</button>
+        </div>
+        <div class="card private-card">
+          <div class="card-title advanced">Advanced</div>
+          <div class="price">3400 EGP</div>
+          <div class="discount">15% off</div>
+          <ul>
+            <li><span class="check">&#10003;</span>2 months plan</li>
+            <li><span class="check">&#10003;</span>Discount applied</li>
+          </ul>
+          <button class="book-now-btn" onclick="showForm()">Book Now</button>
+        </div>
+        <div class="card private-card shadow-card">
+          <div class="card-title special">Special</div>
+          <div class="price">8000 EGP</div>
+          <div class="discount">25% off</div>
+          <ul>
+            <li><span class="check">&#10003;</span>5 months plan</li>
+            <li><span class="check">&#10003;</span>25% off discount</li>
+          </ul>
+          <button class="book-now-btn" onclick="showForm()">Book Now</button>
+        </div>
+      </div>
+
+      <!-- General Plans -->
+      <div class="active-cards general" style="display: none;">
+        <div class="card general-card">
+          <div class="card-title basic">Basic</div>
+          <div class="price">600 EGP / month</div>
+          <ul>
+            <li><span class="check">&#10003;</span>Price per month</li>
+            <li><span class="check">&#10003;</span>No discount</li>
+          </ul>
+          <button class="book-now-btn" onclick="showForm()">Book Now</button>
+        </div>
+        <div class="card general-card">
+          <div class="card-title advanced">Advanced</div>
+          <div class="price">Discounted Price</div>
+          <div class="discount">15% off</div>
+          <ul>
+            <li><span class="check">&#10003;</span>3 months plan</li>
+            <li><span class="check">&#10003;</span>Discount applied</li>
+          </ul>
+          <button class="book-now-btn" onclick="showForm()">Book Now</button>
+        </div>
+        <div class="card general-card shadow-card">
+          <div class="card-title special">Special</div>
+          <div class="price">Discounted Price</div>
+          <div class="discount">20% off</div>
+          <ul>
+            <li><span class="check">&#10003;</span>5 months plan</li>
+            <li><span class="check">&#10003;</span>20% off discount</li>
+          </ul>
+          <button class="book-now-btn" onclick="showForm()">Book Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Form -->
+<div class="form-container" id="form-container">
+    <div class="form-header">
+        <h2 class="from-head">Booking Form</h2>
+    </div>
+
+    <form id="userForm">
+        <!-- Phone with Country Code -->
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" placeholder="Phone number with country key" required>
+
+        <!-- Name -->
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Your name" required>
+
+        <!-- Age -->
+        <label for="age">Age</label>
+        <select id="age" name="age" required>
+            <option value="7-9">7-9</option>
+            <option value="10-12">10-12</option>
+            <option value="13-16">13-16</option>
+            <option value="17-60">17-60</option>
+        </select>
+
+        <!-- Beach Selection -->
+        <label for="beach">Preferred Beach</label>
+        <select id="beach" name="beach" required>
+            <option value="Beach 1">Beach 1</option>
+            <option value="Beach 2">Beach 2</option>
+            <option value="Beach 3">Beach 3</option>
+        </select>
+
+        <!-- Continuing Course -->
+        <label>Continuing from previous course?</label>
+        <div class="yes-no-buttons"   >
+            <button   type="button" onclick="toggleCourseInput(true)">Yes</button>
+            <button   type="button" onclick="toggleCourseInput(false)">No</button>
+        </div>
+
+        <!-- Extra Course Input -->
+        <div class="extra-course-input" id="extra-course-input">
+            <label for="course">Choose Course to Complete</label>
+            <select id="course" name="course">
+                <option value="Course 1">Course 1</option>
+                <option value="Course 2">Course 2</option>
+                <option value="Course 3">Course 3</option>
+            </select>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="submit-cancel">
+            <button type="submit">Submit</button>
+            <button type="button" class="close-btn" onclick="closeForm()">Cancel</button>
+        </div>
+    </form>
+</div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@latest/dist/umd/supabase.js"></script>
+
+  <script>
+    function togglePlans(planType) {
+      const privatePlans = document.querySelector('.private');
+      const generalPlans = document.querySelector('.general');
+      const privateButton = document.querySelector('.private-btn');
+      const generalButton = document.querySelector('.general-btn');
+      const cards = document.querySelectorAll('.card');
+
+      if (planType === 'private') {
+        privatePlans.style.display = 'flex';
+        generalPlans.style.display = 'none';
+        privateButton.classList.add('active');
+        generalButton.classList.remove('active');
+        privateButton.style.backgroundColor = '#4CAF50'; 
+        generalButton.style.backgroundColor = '#2196F3'; 
+
+        cards.forEach(card => {
+          if (card.classList.contains('private-card')) {
+            card.style.backgroundColor = '#e8f5e9';
+          } else {
+            card.style.backgroundColor = '';
+          }
+        });
+      } else {
+        privatePlans.style.display = 'none';
+        generalPlans.style.display = 'flex';
+        privateButton.classList.remove('active');
+        generalButton.classList.add('active');
+        privateButton.style.backgroundColor = '#4CAF50'; 
+        generalButton.style.backgroundColor = '#2196F3'; 
+
+        cards.forEach(card => {
+          if (card.classList.contains('general-card')) {
+            card.style.backgroundColor = '#e3f2fd';
+          } else {
+            card.style.backgroundColor = '';
+          }
+        });
+      }
+    }
+
+  
+    function showForm() {
+      const formContainer = document.getElementById('form-container');
+      const overlay = document.getElementById('overlay');
+      formContainer.classList.add('active');
+      overlay.style.display = 'block'; // Show overlay
+    }
+
+    function closeForm() {
+      const formContainer = document.getElementById('form-container');
+      const overlay = document.getElementById('overlay');
+      formContainer.classList.remove('active');
+      overlay.style.display = 'none'; // Hide overlay
+    }
+
+
+
+
+    function toggleCourseInput(isYes) {
+    const extraCourseInput = document.getElementById('extra-course-input');
+    extraCourseInput.style.display = isYes ? 'block' : 'none'; // Show or hide the extra course input
+
+    // Remove active class from both buttons
+    const buttons = document.querySelectorAll('.yes-no-buttons button');
+    buttons.forEach(button => button.classList.remove('active'));
+
+    // Add active class to the clicked button
+    if (isYes) {
+        buttons[0].classList.add('active'); // Yes button
+    } else {
+        buttons[1].classList.add('active'); // No button
+    }
+}
+
+
+    // Form submission
+    document.addEventListener("DOMContentLoaded", function () {
+            // Initialize Supabase
+            const supabaseUrl = "https://qufpmwvtbdgskhjyhqif.supabase.co";
+            const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1ZnBtd3Z0YmRnc2toanlocWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MTg3NTgsImV4cCI6MjA1ODA5NDc1OH0.Uc4Izu3JkxHBg4sfdxdZ6K0Ihao6wSm2mTIaaezBXcs";
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+            document.getElementById('userForm').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                const phone = document.getElementById('phone').value;
+                const name = document.getElementById('name').value;
+                const age = document.getElementById('age').value;
+                const beach = document.getElementById('beach').value;
+
+
+                // Check which button is active
+    const previousCourseButton = document.querySelector('.yes-no-buttons .active');
+    const previousCourse = previousCourseButton ? previousCourseButton.innerText === 'Yes' : false;
+    const course = previousCourse ? document.getElementById('course').value : null;
+
+
+                 // Validate input data
+    if (!phone || !name || !age || !beach  ) {
+        alert('Please fill out all required fields.');
+        return; // Stop the submission if validation fails
+    }
+
+    const { data, error } = await supabase
+        .from('bookings') // Ensure you have a 'bookings' table in your Supabase database
+        .insert([{ name, age, phone, previousCourse, beach,course }]); // Include beach and course in the insert
+
+    if (error) {
+        console.error('Error:', error); // Log the error to the console
+        alert('There was an error submitting your booking. Please try again.');
+    } else {
+        alert('Booking submitted successfully!');
+        closeForm(); // Close the form after submission
+    }
+
+                
+               
+                
+            });
+        });
+
+
+
+   
+
+
+  </script>
+
+
+
+</body>
+</html>
